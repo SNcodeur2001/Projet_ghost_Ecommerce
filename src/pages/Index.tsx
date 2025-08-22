@@ -1,61 +1,51 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Layout/Navbar";
-import { ProductCard, Product } from "@/components/Products/ProductCard";
+import { ProductCard, Product as CardProduct } from "@/components/Products/ProductCard";
 import { CartSheet, CartItem } from "@/components/Cart/CartSheet";
 import { Checkout } from "./Checkout";
 import { Admin } from "./Admin";
-import { useToast } from "@/hooks/use-toast";
-
-// Données de démonstration
-const initialProducts: Product[] = [
-  {
-    id: "1",
-    name: "Smartphone Premium",
-    description: "Dernier modèle avec écran OLED et caméra 108MP",
-    price: 250000,
-    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400",
-    category: "Électronique",
-    rating: 4.8,
-    inStock: true,
-  },
-  {
-    id: "2",
-    name: "Sac à Main Élégant",
-    description: "Sac en cuir véritable, parfait pour toutes occasions",
-    price: 45000,
-    image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400",
-    category: "Vêtements",
-    rating: 4.6,
-    inStock: true,
-  },
-  {
-    id: "3",
-    name: "Écouteurs Sans Fil",
-    description: "Audio haute qualité avec réduction de bruit active",
-    price: 85000,
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400",
-    category: "Électronique",
-    rating: 4.7,
-    inStock: false,
-  },
-];
+import { Auth } from "./Auth";
+import { useProducts, Product } from "@/hooks/useProducts";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const { products, loading, createProduct, updateProduct, deleteProduct, uploadProductImage } = useProducts();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<"shop" | "checkout" | "admin">("shop");
-  const [isAdminMode, setIsAdminMode] = useState(false);
-  const { toast } = useToast();
+  const [currentPage, setCurrentPage] = useState<"shop" | "checkout" | "admin" | "auth">("shop");
+  const [user, setUser] = useState(null);
 
-  const addToCart = (product: Product) => {
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const convertToCardProduct = (product: Product): CardProduct => ({
+    id: product.id,
+    name: product.name,
+    description: product.description || "",
+    price: product.price,
+    image: product.image_url || "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400",
+    category: product.category || "Général",
+    rating: 4.5,
+    inStock: product.in_stock ?? true,
+  });
+
+  const addToCart = (product: CardProduct) => {
     setCartItems(prev => {
       const existingItem = prev.find(item => item.id === product.id);
       if (existingItem) {
-        toast({
-          title: "Produit ajouté",
-          description: `${product.name} - Quantité mise à jour dans le panier`,
-        });
+        toast.success(`${product.name} - Quantité mise à jour dans le panier`);
         return prev.map(item =>
           item.id === product.id 
             ? { ...item, quantity: item.quantity + 1 }
@@ -63,86 +53,47 @@ const Index = () => {
         );
       }
       
-      toast({
-        title: "Produit ajouté",
-        description: `${product.name} ajouté au panier`,
-      });
-      
+      toast.success(`${product.name} ajouté au panier`);
       return [...prev, { ...product, quantity: 1 }];
     });
   };
 
-  const updateCartQuantity = (id: string, quantity: number) => {
-    if (quantity === 0) {
-      removeFromCart(id);
-      return;
+  const handlePayment = async (method: string, customerInfo: any) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('paydunya-payment', {
+        body: {
+          amount: cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+          customerInfo,
+          orderItems: cartItems,
+          paymentMethod: method
+        }
+      });
+
+      if (error) {
+        toast.error("Erreur lors du traitement du paiement");
+        return;
+      }
+
+      if (data.success) {
+        toast.success("Commande confirmée! Redirection vers le paiement...");
+        setTimeout(() => {
+          window.open(data.payment_url, '_blank');
+          setCartItems([]);
+          setCurrentPage("shop");
+        }, 1500);
+      } else {
+        toast.error(data.error || "Erreur lors du paiement");
+      }
+    } catch (error) {
+      toast.error("Erreur lors du traitement de la commande");
     }
-    
-    setCartItems(prev =>
-      prev.map(item =>
-        item.id === id ? { ...item, quantity } : item
-      )
-    );
-  };
-
-  const removeFromCart = (id: string) => {
-    setCartItems(prev => prev.filter(item => item.id !== id));
-    toast({
-      title: "Produit retiré",
-      description: "Le produit a été retiré de votre panier",
-    });
-  };
-
-  const handleCheckout = () => {
-    setCurrentPage("checkout");
-    setIsCartOpen(false);
-  };
-
-  const handlePayment = (method: string, customerInfo: any) => {
-    toast({
-      title: "Commande confirmée!",
-      description: `Votre commande sera traitée via ${method}. Merci pour votre achat!`,
-    });
-    
-    // Simuler le traitement du paiement
-    setTimeout(() => {
-      setCartItems([]);
-      setCurrentPage("shop");
-    }, 2000);
-  };
-
-  const addProduct = (productData: Omit<Product, "id">) => {
-    const newProduct: Product = {
-      ...productData,
-      id: Date.now().toString(),
-    };
-    setProducts(prev => [...prev, newProduct]);
-    toast({
-      title: "Produit ajouté",
-      description: `${productData.name} a été ajouté au catalogue`,
-    });
-  };
-
-  const updateProduct = (product: Product) => {
-    setProducts(prev =>
-      prev.map(p => p.id === product.id ? product : p)
-    );
-    toast({
-      title: "Produit modifié",
-      description: `${product.name} a été mis à jour`,
-    });
-  };
-
-  const deleteProduct = (id: string) => {
-    const product = products.find(p => p.id === id);
-    setProducts(prev => prev.filter(p => p.id !== id));
-    toast({
-      title: "Produit supprimé",
-      description: `${product?.name} a été supprimé du catalogue`,
-    });
   };
 
   const totalCartItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  if (currentPage === "auth") {
+    return <Auth onBack={() => setCurrentPage("shop")} />;
+  }
 
   if (currentPage === "checkout") {
     return (
@@ -154,79 +105,104 @@ const Index = () => {
     );
   }
 
-  if (currentPage === "admin" || isAdminMode) {
+  if (currentPage === "admin" && user) {
     return (
       <>
         <Navbar
-          cartItems={totalCartItems}
+          cartItemsCount={totalCartItems}
           onCartClick={() => setIsCartOpen(true)}
-          isAdmin={true}
-          onAdminToggle={() => {
-            setIsAdminMode(false);
-            setCurrentPage("shop");
-          }}
+          onAdminClick={() => setCurrentPage("shop")}
+          onAuthClick={() => setCurrentPage("auth")}
         />
         <Admin
           products={products}
-          onAddProduct={addProduct}
+          onAddProduct={createProduct}
           onUpdateProduct={updateProduct}
           onDeleteProduct={deleteProduct}
+          onImageUpload={uploadProductImage}
         />
         <CartSheet
           isOpen={isCartOpen}
           onClose={() => setIsCartOpen(false)}
           items={cartItems}
-          onUpdateQuantity={updateCartQuantity}
-          onRemoveItem={removeFromCart}
-          onCheckout={handleCheckout}
+          onUpdateQuantity={(id, quantity) => {
+            if (quantity === 0) {
+              setCartItems(prev => prev.filter(item => item.id !== id));
+            } else {
+              setCartItems(prev => prev.map(item => item.id === id ? { ...item, quantity } : item));
+            }
+          }}
+          onRemoveItem={(id) => setCartItems(prev => prev.filter(item => item.id !== id))}
+          onCheckout={() => {
+            setCurrentPage("checkout");
+            setIsCartOpen(false);
+          }}
         />
       </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-hero">
       <Navbar
-        cartItems={totalCartItems}
+        cartItemsCount={totalCartItems}
         onCartClick={() => setIsCartOpen(true)}
-        isAdmin={false}
-        onAdminToggle={() => setIsAdminMode(true)}
+        onAdminClick={() => {
+          if (user) {
+            setCurrentPage("admin");
+          } else {
+            setCurrentPage("auth");
+          }
+        }}
+        onAuthClick={() => setCurrentPage("auth")}
       />
 
-      {/* Hero Section */}
-      <section className="relative py-20 px-4 text-center bg-gradient-hero">
+      <section className="relative py-20 px-4 text-center">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
-            Bienvenue chez VendiCraft
+          <div className="flex justify-center mb-8">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-full bg-foreground/10 flex items-center justify-center">
+                <div className="text-4xl">👻</div>
+              </div>
+              <div className="absolute inset-0 rounded-full bg-foreground/5 animate-pulse"></div>
+            </div>
+          </div>
+          <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
+            Ghost Commerce
           </h1>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
             Découvrez notre collection de produits premium avec une expérience d'achat exceptionnelle
           </p>
         </div>
       </section>
 
-      {/* Products Section */}
-      <section className="py-16 px-4">
+      <section className="py-16 px-4 bg-background">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4">Nos Produits</h2>
+            <h2 className="text-3xl font-bold mb-4 text-foreground">Nos Produits</h2>
             <p className="text-muted-foreground text-lg">
               Sélection premium de produits pour tous vos besoins
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {products.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={addToCart}
-                isAdmin={false}
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground text-lg">Chargement des produits...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {products.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={convertToCardProduct(product)}
+                  onAddToCart={addToCart}
+                  isAdmin={false}
+                />
+              ))}
+            </div>
+          )}
 
-          {products.length === 0 && (
+          {!loading && products.length === 0 && (
             <div className="text-center py-12">
               <p className="text-muted-foreground text-lg">
                 Aucun produit disponible pour le moment
@@ -240,9 +216,18 @@ const Index = () => {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         items={cartItems}
-        onUpdateQuantity={updateCartQuantity}
-        onRemoveItem={removeFromCart}
-        onCheckout={handleCheckout}
+        onUpdateQuantity={(id, quantity) => {
+          if (quantity === 0) {
+            setCartItems(prev => prev.filter(item => item.id !== id));
+          } else {
+            setCartItems(prev => prev.map(item => item.id === id ? { ...item, quantity } : item));
+          }
+        }}
+        onRemoveItem={(id) => setCartItems(prev => prev.filter(item => item.id !== id))}
+        onCheckout={() => {
+          setCurrentPage("checkout");
+          setIsCartOpen(false);
+        }}
       />
     </div>
   );

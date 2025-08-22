@@ -1,72 +1,106 @@
-import { ShoppingCart, User, Search, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { ShoppingCart, Ghost, Settings, LogIn, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 interface NavbarProps {
-  cartItems: number;
+  cartItemsCount: number;
   onCartClick: () => void;
-  isAdmin?: boolean;
-  onAdminToggle?: () => void;
+  onAdminClick: () => void;
+  onAuthClick: () => void;
 }
 
-export const Navbar = ({ cartItems, onCartClick, isAdmin = false, onAdminToggle }: NavbarProps) => {
+export const Navbar = ({ cartItemsCount, onCartClick, onAdminClick, onAuthClick }: NavbarProps) => {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
   return (
-    <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <div className="flex items-center">
-            <div className="bg-gradient-primary p-2 rounded-lg">
-              <Store className="h-6 w-6 text-white" />
-            </div>
-            <span className="ml-3 text-xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              VendiCraft
-            </span>
-          </div>
-
-          {/* Search */}
-          <div className="hidden md:flex items-center flex-1 max-w-lg mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input 
-                placeholder="Rechercher des produits..." 
-                className="pl-10 bg-muted/50 border-0 focus-visible:ring-1"
-              />
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="relative">
+            <Ghost className="h-8 w-8 text-foreground" />
+            <div className="absolute inset-0 animate-pulse">
+              <Ghost className="h-8 w-8 text-muted-foreground opacity-50" />
             </div>
           </div>
-
-          {/* Actions */}
-          <div className="flex items-center space-x-4">
-            {onAdminToggle && (
-              <Button
-                variant={isAdmin ? "default" : "outline"}
+          <h1 className="text-2xl font-bold text-foreground">
+            Ghost Commerce
+          </h1>
+        </div>
+        
+        <div className="flex items-center space-x-4">
+          {user ? (
+            <>
+              <Button 
+                variant="ghost" 
                 size="sm"
-                onClick={onAdminToggle}
-                className={isAdmin ? "bg-gradient-primary" : ""}
+                onClick={onAdminClick}
+                className="hidden sm:inline-flex hover:bg-accent"
               >
-                <User className="h-4 w-4 mr-2" />
-                {isAdmin ? "Mode Client" : "Admin"}
+                <Settings className="h-4 w-4 mr-2" />
+                Admin
               </Button>
-            )}
-            
-            <Button
-              variant="ghost"
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleSignOut}
+                className="hidden sm:inline-flex hover:bg-accent"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Déconnexion
+              </Button>
+            </>
+          ) : (
+            <Button 
+              variant="ghost" 
               size="sm"
-              className="relative"
-              onClick={onCartClick}
+              onClick={onAuthClick}
+              className="hidden sm:inline-flex hover:bg-accent"
             >
-              <ShoppingCart className="h-5 w-5" />
-              {cartItems > 0 && (
-                <Badge 
-                  variant="destructive" 
-                  className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-gradient-accent"
-                >
-                  {cartItems}
-                </Badge>
-              )}
+              <LogIn className="h-4 w-4 mr-2" />
+              Connexion
             </Button>
-          </div>
+          )}
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onCartClick}
+            className="relative hover:bg-accent border-border"
+          >
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Panier
+            {cartItemsCount > 0 && (
+              <Badge 
+                variant="secondary" 
+                className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-foreground text-background"
+              >
+                {cartItemsCount}
+              </Badge>
+            )}
+          </Button>
         </div>
       </div>
     </nav>
