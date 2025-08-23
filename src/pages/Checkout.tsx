@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CreditCard, Smartphone, Wallet } from "lucide-react";
+import { ArrowLeft, CreditCard, Smartphone, Wallet, Send } from "lucide-react";
 import { CartItem } from "@/components/Cart/CartSheet";
 
 interface CheckoutProps {
@@ -13,6 +13,31 @@ interface CheckoutProps {
   onBack: () => void;
   onPayment: (method: string, customerInfo: any) => void;
 }
+
+// Format order details for WhatsApp message
+const formatOrderForWhatsApp = (items: CartItem[], customerInfo: any, total: number) => {
+  let message = "🛍️ *Nouvelle commande passée sur Ghost Commerce*\n\n";
+  
+  message += "👤 *Informations client:*\n";
+  message += `Nom: ${customerInfo.name}\n`;
+  message += `Email: ${customerInfo.email}\n`;
+  message += `Téléphone: ${customerInfo.phone}\n`;
+  message += `Adresse: ${customerInfo.address}\n\n`;
+  
+  message += "📦 *Détails de la commande:*\n";
+  items.forEach(item => {
+    message += `\n• ${item.name}\n`;
+    message += `  Quantité: ${item.quantity}\n`;
+    message += `  Prix unitaire: ${item.price.toLocaleString()} FCFA\n`;
+    message += `  Total: ${(item.price * item.quantity).toLocaleString()} FCFA\n`;
+    message += `  Image: ${item.image}\n`;
+  });
+  
+  message += `\n💰 *Total de la commande: ${total.toLocaleString()} FCFA*\n\n`;
+  message += "Merci pour votre commande!";
+  
+  return encodeURIComponent(message);
+};
 
 export const Checkout = ({ items, onBack, onPayment }: CheckoutProps) => {
   const [selectedPayment, setSelectedPayment] = useState<string>("");
@@ -130,14 +155,32 @@ export const Checkout = ({ items, onBack, onPayment }: CheckoutProps) => {
                   })}
                 </div>
 
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-primary hover:shadow-button transition-all duration-300"
-                  size="lg"
-                  disabled={!selectedPayment}
-                >
-                  Payer {total.toLocaleString()} FCFA
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    type="submit"
+                    className="flex-1 bg-gradient-primary hover:shadow-button transition-all duration-300"
+                    size="lg"
+                    disabled={!selectedPayment}
+                  >
+                    Payer {total.toLocaleString()} FCFA
+                  </Button>
+                  
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="flex-1 border-primary text-primary hover:bg-primary/10"
+                    size="lg"
+                    onClick={() => {
+                      const whatsappMessage = formatOrderForWhatsApp(items, customerInfo, total);
+                      const ownerNumber = import.meta.env.VITE_OWNER_WHATSAPP_NUMBER || "+1234567890";
+                      const whatsappUrl = `https://wa.me/${ownerNumber}?text=${whatsappMessage}`;
+                      window.open(whatsappUrl, '_blank');
+                    }}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Envoyer par WhatsApp
+                  </Button>
+                </div>
               </form>
             </CardContent>
           </Card>

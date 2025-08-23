@@ -59,6 +59,21 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Cloudinary (for image hosting)
+
+## Cloudinary Setup
+
+To use Cloudinary for image hosting:
+
+1. Create a Cloudinary account at [cloudinary.com](https://cloudinary.com)
+2. Get your Cloud Name, API Key, and API Secret from the Cloudinary dashboard
+3. Update the .env file with your Cloudinary credentials:
+   ```
+   VITE_CLOUDINARY_CLOUD_NAME=your_actual_cloud_name
+   VITE_CLOUDINARY_API_KEY=your_actual_api_key
+   VITE_CLOUDINARY_API_SECRET=your_actual_api_secret
+   ```
+4. Restart the development server
 
 ## How can I deploy this project?
 

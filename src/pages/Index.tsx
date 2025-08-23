@@ -47,7 +47,7 @@ const Index = () => {
       if (existingItem) {
         toast.success(`${product.name} - Quantité mise à jour dans le panier`);
         return prev.map(item =>
-          item.id === product.id 
+          item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
@@ -56,6 +56,31 @@ const Index = () => {
       toast.success(`${product.name} ajouté au panier`);
       return [...prev, { ...product, quantity: 1 }];
     });
+  };
+
+  // Format order details for WhatsApp message
+  const formatOrderForWhatsApp = (items: CartItem[], customerInfo: any, total: number) => {
+    let message = "🛍️ *Nouvelle commande passée sur Ghost Commerce*\n\n";
+    
+    message += "👤 *Informations client:*\n";
+    message += `Nom: ${customerInfo.name}\n`;
+    message += `Email: ${customerInfo.email}\n`;
+    message += `Téléphone: ${customerInfo.phone}\n`;
+    message += `Adresse: ${customerInfo.address}\n\n`;
+    
+    message += "📦 *Détails de la commande:*\n";
+    items.forEach(item => {
+      message += `\n• ${item.name}\n`;
+      message += `  Quantité: ${item.quantity}\n`;
+      message += `  Prix unitaire: ${item.price.toLocaleString()} FCFA\n`;
+      message += `  Total: ${(item.price * item.quantity).toLocaleString()} FCFA\n`;
+      message += `  Image: ${item.image}\n`;
+    });
+    
+    message += `\n💰 *Total de la commande: ${total.toLocaleString()} FCFA*\n\n`;
+    message += "Merci pour votre commande!";
+    
+    return encodeURIComponent(message);
   };
 
   const handlePayment = async (method: string, customerInfo: any) => {
@@ -76,6 +101,19 @@ const Index = () => {
 
       if (data.success) {
         toast.success("Commande confirmée! Redirection vers le paiement...");
+        
+        // Show notification about WhatsApp message
+        toast.info("Détails de la commande envoyés par WhatsApp au propriétaire");
+        
+        // Send order details to owner via WhatsApp
+        const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const whatsappMessage = formatOrderForWhatsApp(cartItems, customerInfo, total);
+        const ownerNumber = import.meta.env.VITE_OWNER_WHATSAPP_NUMBER || "+1234567890";
+        const whatsappUrl = `https://wa.me/${ownerNumber}?text=${whatsappMessage}`;
+        
+        // Open WhatsApp in a new tab
+        window.open(whatsappUrl, '_blank');
+        
         setTimeout(() => {
           window.open(data.payment_url, '_blank');
           setCartItems([]);

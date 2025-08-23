@@ -8,18 +8,32 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2 } from "lucide-react";
-import { Product } from "@/components/Products/ProductCard";
+import { Product as CardProduct } from "@/components/Products/ProductCard";
+import { Product as UseProduct } from "@/hooks/useProducts";
 
 interface AdminProps {
-  products: Product[];
-  onAddProduct: (product: Omit<Product, "id">) => void;
-  onUpdateProduct: (product: Product) => void;
+  products: UseProduct[];
+  onAddProduct: (product: Omit<UseProduct, "id" | "created_at" | "updated_at">) => void;
+  onUpdateProduct: (id: string, updates: Partial<Omit<UseProduct, "id" | "created_at" | "updated_at">>) => void;
   onDeleteProduct: (id: string) => void;
+  onImageUpload: (file: File) => Promise<string | null>;
 }
 
-export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct }: AdminProps) => {
+// Convert database product to UI product for display
+const convertToUIProduct = (product: UseProduct): CardProduct => ({
+  id: product.id,
+  name: product.name,
+  description: product.description || "",
+  price: product.price,
+  image: product.image_url || "",
+  category: product.category || "",
+  rating: 4.5, // Default rating since it's not in the database
+  inStock: product.in_stock ?? true,
+});
+
+export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct, onImageUpload }: AdminProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<UseProduct | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -29,24 +43,32 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
     rating: "4.5",
     inStock: true,
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const categories = ["Électronique", "Vêtements", "Maison", "Sport", "Beauté", "Livres"];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    let imageUrl = formData.image;
+    
+    // If there's an image file, upload it to Cloudinary
+    if (imageFile) {
+      imageUrl = await onImageUpload(imageFile) || imageUrl;
+    }
+
+    // Convert form data to database format
     const productData = {
       name: formData.name,
       description: formData.description,
       price: parseFloat(formData.price),
-      image: formData.image,
+      image_url: imageUrl,
       category: formData.category,
-      rating: parseFloat(formData.rating),
-      inStock: formData.inStock,
+      in_stock: formData.inStock,
     };
 
     if (editingProduct) {
-      onUpdateProduct({ ...editingProduct, ...productData });
+      onUpdateProduct(editingProduct.id, productData);
     } else {
       onAddProduct(productData);
     }
@@ -64,21 +86,23 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
       rating: "4.5",
       inStock: true,
     });
+    setImageFile(null);
     setIsEditing(false);
     setEditingProduct(null);
   };
 
-  const handleEdit = (product: Product) => {
+  const handleEdit = (product: UseProduct) => {
     setEditingProduct(product);
     setFormData({
       name: product.name,
-      description: product.description,
+      description: product.description || "",
       price: product.price.toString(),
-      image: product.image,
-      category: product.category,
-      rating: product.rating.toString(),
-      inStock: product.inStock,
+      image: product.image_url || "",
+      category: product.category || "",
+      rating: "4.5",
+      inStock: product.in_stock ?? true,
     });
+    setImageFile(null); // Reset file when editing
     setIsEditing(true);
   };
 
@@ -142,13 +166,30 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
                   </div>
 
                   <div>
-                    <Label htmlFor="image">URL de l'image</Label>
+                    <Label htmlFor="image">Image du produit</Label>
                     <Input
                       id="image"
-                      value={formData.image}
-                      onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-                      required
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] || null;
+                        setImageFile(file);
+                        if (file) {
+                          // Set a preview URL
+                          const previewUrl = URL.createObjectURL(file);
+                          setFormData(prev => ({ ...prev, image: previewUrl }));
+                        }
+                      }}
                     />
+                    {formData.image && (
+                      <div className="mt-2">
+                        <img
+                          src={formData.image}
+                          alt="Preview"
+                          className="h-32 w-32 object-cover rounded border"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -205,52 +246,55 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
                       Aucun produit ajouté pour le moment
                     </div>
                   ) : (
-                    products.map((product) => (
-                      <div
-                        key={product.id}
-                        className="flex items-center space-x-4 p-4 border rounded-lg hover:shadow-card-hover transition-shadow"
-                      >
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="h-16 w-16 rounded object-cover"
-                        />
-                        <div className="flex-1">
-                          <h3 className="font-semibold">{product.name}</h3>
-                          <p className="text-sm text-muted-foreground line-clamp-1">
-                            {product.description}
-                          </p>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <Badge variant="secondary">{product.category}</Badge>
-                            <span className="text-sm font-medium">
-                              {product.price.toLocaleString()} FCFA
-                            </span>
-                            {product.inStock ? (
-                              <Badge variant="default" className="bg-success">En stock</Badge>
-                            ) : (
-                              <Badge variant="destructive">Rupture</Badge>
-                            )}
+                    products.map((product) => {
+                      const uiProduct = convertToUIProduct(product);
+                      return (
+                        <div
+                          key={uiProduct.id}
+                          className="flex items-center space-x-4 p-4 border rounded-lg hover:shadow-card-hover transition-shadow"
+                        >
+                          <img
+                            src={uiProduct.image}
+                            alt={uiProduct.name}
+                            className="h-16 w-16 rounded object-cover"
+                          />
+                          <div className="flex-1">
+                            <h3 className="font-semibold">{uiProduct.name}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-1">
+                              {uiProduct.description}
+                            </p>
+                            <div className="flex items-center space-x-2 mt-1">
+                              <Badge variant="secondary">{uiProduct.category}</Badge>
+                              <span className="text-sm font-medium">
+                                {uiProduct.price.toLocaleString()} FCFA
+                              </span>
+                              {uiProduct.inStock ? (
+                                <Badge variant="default" className="bg-success">En stock</Badge>
+                              ) : (
+                                <Badge variant="destructive">Rupture</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex space-x-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleEdit(product)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => onDeleteProduct(product.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex space-x-2">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleEdit(product)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => onDeleteProduct(product.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </CardContent>

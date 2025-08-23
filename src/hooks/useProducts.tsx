@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { uploadToCloudinary } from "@/lib/cloudinary";
 
 export interface Product {
   id: string;
@@ -114,28 +115,12 @@ export const useProducts = () => {
 
   const uploadProductImage = async (file: File) => {
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `products/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('product-images')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        toast.error("Erreur lors de l'upload de l'image");
-        console.error("Error uploading image:", uploadError);
-        return null;
-      }
-
-      const { data } = supabase.storage
-        .from('product-images')
-        .getPublicUrl(filePath);
-
-      return data.publicUrl;
+      // Upload to Cloudinary using direct upload
+      const uploadResult = await uploadToCloudinary(file, { folder: "products" });
+      return uploadResult.secure_url;
     } catch (error) {
       toast.error("Erreur lors de l'upload de l'image");
-      console.error("Error uploading image:", error);
+      console.error("Error uploading image to Cloudinary:", error);
       return null;
     }
   };
