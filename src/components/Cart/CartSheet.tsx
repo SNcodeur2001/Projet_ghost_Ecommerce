@@ -113,7 +113,7 @@ export const CartSheet = ({
                   size="lg"
                   onClick={onCheckout}
                 >
-                  Procéder au paiement
+                  Envoyer la commande par WhatsApp
                 </Button>
               </div>
             </>

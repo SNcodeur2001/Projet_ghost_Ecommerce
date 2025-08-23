@@ -61,23 +61,42 @@ This project is built with:
 - Tailwind CSS
 - Cloudinary (for image hosting)
 
-## Cloudinary Setup
-
-To use Cloudinary for image hosting:
-
-1. Create a Cloudinary account at [cloudinary.com](https://cloudinary.com)
-2. Get your Cloud Name, API Key, and API Secret from the Cloudinary dashboard
-3. Update the .env file with your Cloudinary credentials:
-   ```
-   VITE_CLOUDINARY_CLOUD_NAME=your_actual_cloud_name
-   VITE_CLOUDINARY_API_KEY=your_actual_api_key
-   VITE_CLOUDINARY_API_SECRET=your_actual_api_secret
-   ```
-4. Restart the development server
-
 ## How can I deploy this project?
 
+### Option 1: Using Lovable
+
 Simply open [Lovable](https://lovable.dev/projects/c252cd93-43b8-475e-ab4e-38f2894ab221) and click on Share -> Publish.
+
+### Option 2: Using Vercel
+
+This project is configured for deployment on Vercel. Follow these steps:
+
+1. Create an account on [Vercel](https://vercel.com)
+2. Install the Vercel CLI: `npm install -g vercel`
+3. Login to Vercel: `vercel login`
+4. Deploy the project: `vercel --prod`
+
+Or you can deploy directly from GitHub:
+1. Push your code to a GitHub repository
+2. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+3. Click "New Project"
+4. Import your GitHub repository
+5. Configure the project settings:
+   - Framework: Vite
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+6. Add the required environment variables in the Vercel project settings:
+   ```
+   VITE_SUPABASE_PROJECT_ID=your_supabase_project_id
+   VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
+   VITE_SUPABASE_URL=your_supabase_url
+   VITE_CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+   VITE_CLOUDINARY_API_KEY=your_cloudinary_api_key
+   VITE_CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+   VITE_CLOUDINARY_UPLOAD_PRESET=your_cloudinary_upload_preset
+   VITE_OWNER_WHATSAPP_NUMBER=your_whatsapp_number
+   ```
+7. Click "Deploy"
 
 ## Can I connect a custom domain to my Lovable project?
 

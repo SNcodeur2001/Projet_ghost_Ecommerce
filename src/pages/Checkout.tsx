@@ -4,17 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CreditCard, Smartphone, Wallet, Send } from "lucide-react";
+import { ArrowLeft, Send } from "lucide-react";
 import { CartItem } from "@/components/Cart/CartSheet";
 
 interface CheckoutProps {
   items: CartItem[];
   onBack: () => void;
-  onPayment: (method: string, customerInfo: any) => void;
 }
 
-// Format order details for WhatsApp message
+// Format order details for WhatsApp message with image display
 const formatOrderForWhatsApp = (items: CartItem[], customerInfo: any, total: number) => {
   let message = "🛍️ *Nouvelle commande passée sur Ghost Commerce*\n\n";
   
@@ -30,6 +28,7 @@ const formatOrderForWhatsApp = (items: CartItem[], customerInfo: any, total: num
     message += `  Quantité: ${item.quantity}\n`;
     message += `  Prix unitaire: ${item.price.toLocaleString()} FCFA\n`;
     message += `  Total: ${(item.price * item.quantity).toLocaleString()} FCFA\n`;
+    // Add image as a clickable link
     message += `  Image: ${item.image}\n`;
   });
   
@@ -39,8 +38,7 @@ const formatOrderForWhatsApp = (items: CartItem[], customerInfo: any, total: num
   return encodeURIComponent(message);
 };
 
-export const Checkout = ({ items, onBack, onPayment }: CheckoutProps) => {
-  const [selectedPayment, setSelectedPayment] = useState<string>("");
+export const Checkout = ({ items, onBack }: CheckoutProps) => {
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
     email: "",
@@ -50,17 +48,11 @@ export const Checkout = ({ items, onBack, onPayment }: CheckoutProps) => {
 
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const paymentMethods = [
-    { id: "paydunya", name: "PayDunya", icon: CreditCard, description: "Cartes de crédit & Mobile Money" },
-    { id: "wave", name: "Wave", icon: Smartphone, description: "Paiement mobile sécurisé" },
-    { id: "orange-money", name: "Orange Money", icon: Wallet, description: "Mobile Money Orange" },
-  ];
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedPayment) return;
-    
-    onPayment(selectedPayment, customerInfo);
+  const handleWhatsAppSend = () => {
+    const whatsappMessage = formatOrderForWhatsApp(items, customerInfo, total);
+    const ownerNumber = import.meta.env.VITE_OWNER_WHATSAPP_NUMBER || "+221781562041";
+    const whatsappUrl = `https://wa.me/${ownerNumber}?text=${whatsappMessage}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
@@ -78,7 +70,7 @@ export const Checkout = ({ items, onBack, onPayment }: CheckoutProps) => {
               <CardTitle>Informations de livraison</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-4">
                 <div>
                   <Label htmlFor="name">Nom complet</Label>
                   <Input
@@ -122,66 +114,15 @@ export const Checkout = ({ items, onBack, onPayment }: CheckoutProps) => {
 
                 <Separator className="my-6" />
 
-                <div className="space-y-3">
-                  <Label className="text-base font-semibold">Mode de paiement</Label>
-                  {paymentMethods.map((method) => {
-                    const Icon = method.icon;
-                    return (
-                      <div
-                        key={method.id}
-                        className={`p-4 border rounded-lg cursor-pointer transition-all ${
-                          selectedPayment === method.id
-                            ? "border-primary bg-primary/5 ring-1 ring-primary"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                        onClick={() => setSelectedPayment(method.id)}
-                      >
-                        <div className="flex items-center space-x-3">
-                          <Icon className="h-6 w-6 text-primary" />
-                          <div className="flex-1">
-                            <div className="font-medium">{method.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {method.description}
-                            </div>
-                          </div>
-                          {selectedPayment === method.id && (
-                            <Badge variant="default" className="bg-gradient-primary">
-                              Sélectionné
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
-                    type="submit"
-                    className="flex-1 bg-gradient-primary hover:shadow-button transition-all duration-300"
-                    size="lg"
-                    disabled={!selectedPayment}
-                  >
-                    Payer {total.toLocaleString()} FCFA
-                  </Button>
-                  
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1 border-primary text-primary hover:bg-primary/10"
-                    size="lg"
-                    onClick={() => {
-                      const whatsappMessage = formatOrderForWhatsApp(items, customerInfo, total);
-                      const ownerNumber = import.meta.env.VITE_OWNER_WHATSAPP_NUMBER || "+1234567890";
-                      const whatsappUrl = `https://wa.me/${ownerNumber}?text=${whatsappMessage}`;
-                      window.open(whatsappUrl, '_blank');
-                    }}
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    Envoyer par WhatsApp
-                  </Button>
-                </div>
-              </form>
+                <Button
+                  onClick={handleWhatsAppSend}
+                  className="w-full bg-gradient-primary hover:shadow-button transition-all duration-300"
+                  size="lg"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Envoyer la commande par WhatsApp
+                </Button>
+              </div>
             </CardContent>
           </Card>
 

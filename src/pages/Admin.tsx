@@ -7,16 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Upload } from "lucide-react";
 import { Product as CardProduct } from "@/components/Products/ProductCard";
 import { Product as UseProduct } from "@/hooks/useProducts";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AdminProps {
   products: UseProduct[];
   onAddProduct: (product: Omit<UseProduct, "id" | "created_at" | "updated_at">) => void;
   onUpdateProduct: (id: string, updates: Partial<Omit<UseProduct, "id" | "created_at" | "updated_at">>) => void;
   onDeleteProduct: (id: string) => void;
-  onImageUpload: (file: File) => Promise<string | null>;
 }
 
 // Convert database product to UI product for display
@@ -31,7 +32,7 @@ const convertToUIProduct = (product: UseProduct): CardProduct => ({
   inStock: product.in_stock ?? true,
 });
 
-export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct, onImageUpload }: AdminProps) => {
+export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct }: AdminProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingProduct, setEditingProduct] = useState<UseProduct | null>(null);
   const [formData, setFormData] = useState({
@@ -44,17 +45,71 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
     inStock: true,
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const categories = ["Électronique", "Vêtements", "Maison", "Sport", "Beauté", "Livres"];
+
+  // Handle image file selection and preview
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setImageFile(file);
+    
+    if (file) {
+      // Create preview URL
+      const previewUrl = URL.createObjectURL(file);
+      setImagePreview(previewUrl);
+    } else {
+      setImagePreview(null);
+    }
+  };
+
+  // Upload image to Supabase Storage
+  const uploadImage = async (file: File): Promise<string | null> => {
+    try {
+      setIsUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('product-images')
+        .upload(fileName, file);
+      
+      if (error) {
+        toast.error("Erreur lors de l'upload de l'image");
+        console.error("Error uploading image:", error);
+        return null;
+      }
+      
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('product-images')
+        .getPublicUrl(fileName);
+      
+      return publicUrl;
+    } catch (error) {
+      toast.error("Erreur lors de l'upload de l'image");
+      console.error("Error uploading image:", error);
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     let imageUrl = formData.image;
     
-    // If there's an image file, upload it to Cloudinary
+    // If there's a new image file, upload it
     if (imageFile) {
-      imageUrl = await onImageUpload(imageFile) || imageUrl;
+      const uploadedUrl = await uploadImage(imageFile);
+      if (uploadedUrl) {
+        imageUrl = uploadedUrl;
+      } else {
+        // If upload failed, keep the existing image or use empty string
+        imageUrl = editingProduct?.image_url || "";
+      }
     }
 
     // Convert form data to database format
@@ -87,6 +142,7 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
       inStock: true,
     });
     setImageFile(null);
+    setImagePreview(null);
     setIsEditing(false);
     setEditingProduct(null);
   };
@@ -102,7 +158,8 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
       rating: "4.5",
       inStock: product.in_stock ?? true,
     });
-    setImageFile(null); // Reset file when editing
+    setImageFile(null);
+    setImagePreview(null);
     setIsEditing(true);
   };
 
@@ -167,24 +224,29 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
 
                   <div>
                     <Label htmlFor="image">Image du produit</Label>
-                    <Input
-                      id="image"
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] || null;
-                        setImageFile(file);
-                        if (file) {
-                          // Set a preview URL
-                          const previewUrl = URL.createObjectURL(file);
-                          setFormData(prev => ({ ...prev, image: previewUrl }));
-                        }
-                      }}
-                    />
-                    {formData.image && (
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        id="image"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => {
+                          const fileInput = document.getElementById('image') as HTMLInputElement;
+                          if (fileInput) fileInput.click();
+                        }}
+                      >
+                        <Upload className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {(imagePreview || formData.image) && (
                       <div className="mt-2">
                         <img
-                          src={formData.image}
+                          src={imagePreview || formData.image}
                           alt="Preview"
                           className="h-32 w-32 object-cover rounded border"
                         />
@@ -221,8 +283,12 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
                   </div>
 
                   <div className="flex space-x-2">
-                    <Button type="submit" className="flex-1 bg-gradient-primary">
-                      {editingProduct ? "Modifier" : "Ajouter"}
+                    <Button 
+                      type="submit" 
+                      className="flex-1 bg-gradient-primary"
+                      disabled={isUploading}
+                    >
+                      {isUploading ? "Upload en cours..." : (editingProduct ? "Modifier" : "Ajouter")}
                     </Button>
                     <Button type="button" variant="outline" onClick={resetForm}>
                       Annuler
