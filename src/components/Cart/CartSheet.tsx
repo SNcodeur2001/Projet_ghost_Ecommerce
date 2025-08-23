@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { Product } from "../Products/ProductCard";
+import { useNavigate } from "react-router-dom";
 
 export interface CartItem extends Product {
   quantity: number;
@@ -21,7 +22,6 @@ interface CartSheetProps {
   items: CartItem[];
   onUpdateQuantity: (id: string, quantity: number) => void;
   onRemoveItem: (id: string) => void;
-  onCheckout: () => void;
 }
 
 export const CartSheet = ({
@@ -30,9 +30,15 @@ export const CartSheet = ({
   items,
   onUpdateQuantity,
   onRemoveItem,
-  onCheckout,
 }: CartSheetProps) => {
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const navigate = useNavigate();
+
+  const handleCheckout = () => {
+    // Save cart items to localStorage before navigating
+    localStorage.setItem("cartItems", JSON.stringify(items));
+    navigate("/checkout");
+  };
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -111,7 +117,7 @@ export const CartSheet = ({
                 <Button
                   className="w-full bg-gradient-primary hover:shadow-button transition-all duration-300"
                   size="lg"
-                  onClick={onCheckout}
+                  onClick={handleCheckout}
                 >
                   Envoyer la commande par WhatsApp
                 </Button>

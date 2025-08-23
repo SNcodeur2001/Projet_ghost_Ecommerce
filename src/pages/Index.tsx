@@ -2,19 +2,17 @@ import { useState, useEffect } from "react";
 import { Navbar } from "@/components/Layout/Navbar";
 import { ProductCard, Product as CardProduct } from "@/components/Products/ProductCard";
 import { CartSheet, CartItem } from "@/components/Cart/CartSheet";
-import { Checkout } from "./Checkout";
-import { Admin } from "./Admin";
-import { Auth } from "./Auth";
 import { useProducts, Product } from "@/hooks/useProducts";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
-  const { products, loading, createProduct, updateProduct, deleteProduct } = useProducts();
+  const { products, loading } = useProducts();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [currentPage, setCurrentPage] = useState<"shop" | "checkout" | "admin" | "auth">("shop");
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -58,73 +56,19 @@ const Index = () => {
     });
   };
 
-
   const handleCheckout = () => {
-    setCurrentPage("checkout");
-    setIsCartOpen(false);
+    // Save cart items to localStorage before navigating
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
+    navigate("/checkout");
   };
 
   const totalCartItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-
-  if (currentPage === "auth") {
-    return <Auth onBack={() => setCurrentPage("shop")} />;
-  }
-
-  if (currentPage === "checkout") {
-    return (
-      <Checkout
-        items={cartItems}
-        onBack={() => setCurrentPage("shop")}
-      />
-    );
-  }
-
-  if (currentPage === "admin" && user) {
-    return (
-      <>
-        <Navbar
-          cartItemsCount={totalCartItems}
-          onCartClick={() => setIsCartOpen(true)}
-          onAdminClick={() => setCurrentPage("shop")}
-          onAuthClick={() => setCurrentPage("auth")}
-        />
-        <Admin
-          products={products}
-          onAddProduct={createProduct}
-          onUpdateProduct={updateProduct}
-          onDeleteProduct={deleteProduct}
-        />
-        <CartSheet
-          isOpen={isCartOpen}
-          onClose={() => setIsCartOpen(false)}
-          items={cartItems}
-          onUpdateQuantity={(id, quantity) => {
-            if (quantity === 0) {
-              setCartItems(prev => prev.filter(item => item.id !== id));
-            } else {
-              setCartItems(prev => prev.map(item => item.id === id ? { ...item, quantity } : item));
-            }
-          }}
-          onRemoveItem={(id) => setCartItems(prev => prev.filter(item => item.id !== id))}
-          onCheckout={handleCheckout}
-        />
-      </>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-hero">
       <Navbar
         cartItemsCount={totalCartItems}
         onCartClick={() => setIsCartOpen(true)}
-        onAdminClick={() => {
-          if (user) {
-            setCurrentPage("admin");
-          } else {
-            setCurrentPage("auth");
-          }
-        }}
-        onAuthClick={() => setCurrentPage("auth")}
       />
 
       <section className="relative py-20 px-4 text-center">
@@ -194,10 +138,6 @@ const Index = () => {
           }
         }}
         onRemoveItem={(id) => setCartItems(prev => prev.filter(item => item.id !== id))}
-        onCheckout={() => {
-          setCurrentPage("checkout");
-          setIsCartOpen(false);
-        }}
       />
     </div>
   );
