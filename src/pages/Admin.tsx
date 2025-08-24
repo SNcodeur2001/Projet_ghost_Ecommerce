@@ -164,18 +164,18 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 p-4">
+    <div className="min-h-screen bg-gradient-hero p-4 md:p-8 animate-fade-in">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4 animate-fade-in">
           <div>
-            <h1 className="text-3xl font-bold">Administration</h1>
-            <p className="text-muted-foreground">Gérer les produits de votre boutique</p>
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">Administration</h1>
+            <p className="text-muted-foreground mt-2">Gérer les produits de votre boutique</p>
           </div>
           <Button
             onClick={() => setIsEditing(!isEditing)}
-            className="bg-gradient-primary hover:shadow-button transition-all duration-300"
+            className="bg-gradient-primary hover:shadow-button rounded-full px-6 py-3 text-lg transition-all duration-500 hover:scale-105"
           >
-            <Plus className="h-4 w-4 mr-2" />
+            <Plus className="h-5 w-5 mr-2" />
             Ajouter un produit
           </Button>
         </div>
@@ -183,84 +183,91 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Formulaire d'ajout/modification */}
           {isEditing && (
-            <Card className="lg:col-span-1">
-              <CardHeader>
-                <CardTitle>
+            <Card className="lg:col-span-1 bg-card/80 backdrop-blur-sm border-border/50 rounded-2xl shadow-elegant animate-fade-in">
+              <CardHeader className="pb-6">
+                <CardTitle className="text-2xl font-bold">
                   {editingProduct ? "Modifier le produit" : "Ajouter un produit"}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Nom du produit</Label>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="space-y-2 animate-fade-in">
+                    <Label htmlFor="name" className="text-base font-medium">Nom du produit</Label>
                     <Input
                       id="name"
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                       required
+                      className="py-6 px-4 rounded-xl border-border/50 focus:border-primary focus:ring-primary"
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="description">Description</Label>
+                  <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                    <Label htmlFor="description" className="text-base font-medium">Description</Label>
                     <Textarea
                       id="description"
                       value={formData.description}
                       onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                       required
+                      className="py-4 px-4 rounded-xl border-border/50 focus:border-primary focus:ring-primary min-h-[120px]"
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="price">Prix (FCFA)</Label>
+                  <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                    <Label htmlFor="price" className="text-base font-medium">Prix (FCFA)</Label>
                     <Input
                       id="price"
                       type="number"
                       value={formData.price}
                       onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                       required
+                      className="py-6 px-4 rounded-xl border-border/50 focus:border-primary focus:ring-primary"
                     />
                   </div>
 
-                  <div>
-                    <Label htmlFor="image">Image du produit</Label>
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        id="image"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                      />
+                  <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                    <Label htmlFor="image" className="text-base font-medium">Image du produit</Label>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex-1">
+                        <Input
+                          id="image"
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageChange}
+                          className="py-6 px-4 rounded-xl border-border/50 focus:border-primary focus:ring-primary file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                        />
+                      </div>
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
+                        className="rounded-full border-2 hover:border-primary transition-all"
                         onClick={() => {
                           const fileInput = document.getElementById('image') as HTMLInputElement;
                           if (fileInput) fileInput.click();
                         }}
                       >
-                        <Upload className="h-4 w-4" />
+                        <Upload className="h-5 w-5" />
                       </Button>
                     </div>
                     {(imagePreview || formData.image) && (
-                      <div className="mt-2">
+                      <div className="mt-4 flex justify-center animate-fade-in">
                         <img
                           src={imagePreview || formData.image}
                           alt="Preview"
-                          className="h-32 w-32 object-cover rounded border"
+                          className="h-40 w-40 object-cover rounded-2xl border-2 border-border/50 shadow-elegant"
                         />
                       </div>
                     )}
                   </div>
 
-                  <div>
-                    <Label htmlFor="category">Catégorie</Label>
-                    <Select 
-                      value={formData.category} 
+                  <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                    <Label htmlFor="category" className="text-base font-medium">Catégorie</Label>
+                    <Select
+                      value={formData.category}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="py-6 px-4 rounded-xl border-border/50 focus:border-primary focus:ring-primary">
                         <SelectValue placeholder="Sélectionner une catégorie" />
                       </SelectTrigger>
                       <SelectContent>
@@ -273,24 +280,25 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
                     </Select>
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-3 animate-fade-in" style={{ animationDelay: '0.5s' }}>
                     <Switch
                       id="inStock"
                       checked={formData.inStock}
                       onCheckedChange={(checked) => setFormData(prev => ({ ...prev, inStock: checked }))}
+                      className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-border"
                     />
-                    <Label htmlFor="inStock">En stock</Label>
+                    <Label htmlFor="inStock" className="text-base font-medium">En stock</Label>
                   </div>
 
-                  <div className="flex space-x-2">
-                    <Button 
-                      type="submit" 
-                      className="flex-1 bg-gradient-primary"
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+                    <Button
+                      type="submit"
+                      className="flex-1 bg-gradient-primary hover:shadow-button rounded-full py-6 text-lg transition-all duration-500 hover:scale-[1.02]"
                       disabled={isUploading}
                     >
                       {isUploading ? "Upload en cours..." : (editingProduct ? "Modifier" : "Ajouter")}
                     </Button>
-                    <Button type="button" variant="outline" onClick={resetForm}>
+                    <Button type="button" variant="outline" onClick={resetForm} className="rounded-full px-6 py-6 text-lg border-2 hover:border-primary transition-all">
                       Annuler
                     </Button>
                   </div>
@@ -300,44 +308,47 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
           )}
 
           {/* Liste des produits */}
-          <div className={isEditing ? "lg:col-span-2" : "lg:col-span-3"}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Produits ({products.length})</CardTitle>
+          <div className={isEditing ? "lg:col-span-2" : "lg:col-span-3"} animate-fade-in>
+            <Card className="bg-card/80 backdrop-blur-sm border-border/50 rounded-2xl shadow-elegant">
+              <CardHeader className="pb-6">
+                <CardTitle className="text-2xl font-bold">Produits ({products.length})</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {products.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Aucun produit ajouté pour le moment
+                    <div className="text-center py-12 text-muted-foreground animate-fade-in">
+                      <div className="text-5xl mb-4">📦</div>
+                      <p className="text-xl">Aucun produit ajouté pour le moment</p>
+                      <p className="text-sm mt-2">Commencez par ajouter votre premier produit</p>
                     </div>
                   ) : (
-                    products.map((product) => {
+                    products.map((product, index) => {
                       const uiProduct = convertToUIProduct(product);
                       return (
                         <div
                           key={uiProduct.id}
-                          className="flex items-center space-x-4 p-4 border rounded-lg hover:shadow-card-hover transition-shadow"
+                          className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 p-6 bg-muted/30 rounded-2xl border border-border/50 hover:shadow-card-hover transition-all duration-300 animate-fade-in"
+                          style={{ animationDelay: `${index * 0.1}s` }}
                         >
                           <img
                             src={uiProduct.image}
                             alt={uiProduct.name}
-                            className="h-16 w-16 rounded object-cover"
+                            className="h-20 w-20 rounded-xl object-cover"
                           />
                           <div className="flex-1">
-                            <h3 className="font-semibold">{uiProduct.name}</h3>
-                            <p className="text-sm text-muted-foreground line-clamp-1">
+                            <h3 className="font-bold text-lg">{uiProduct.name}</h3>
+                            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
                               {uiProduct.description}
                             </p>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <Badge variant="secondary">{uiProduct.category}</Badge>
-                              <span className="text-sm font-medium">
-                                {uiProduct.price.toLocaleString()} FCFA
+                            <div className="flex flex-wrap items-center gap-2 mt-3">
+                              <Badge variant="secondary" className="rounded-full px-3 py-1">{uiProduct.category}</Badge>
+                              <span className="text-base font-bold">
+                                {uiProduct.price.toLocaleString()} <span className="text-sm font-normal">FCFA</span>
                               </span>
                               {uiProduct.inStock ? (
-                                <Badge variant="default" className="bg-success">En stock</Badge>
+                                <Badge variant="default" className="bg-success rounded-full px-3 py-1">En stock</Badge>
                               ) : (
-                                <Badge variant="destructive">Rupture</Badge>
+                                <Badge variant="destructive" className="rounded-full px-3 py-1">Rupture</Badge>
                               )}
                             </div>
                           </div>
@@ -345,6 +356,7 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
                             <Button
                               variant="outline"
                               size="icon"
+                              className="rounded-full border-2 hover:border-primary transition-all"
                               onClick={() => handleEdit(product)}
                             >
                               <Edit className="h-4 w-4" />
@@ -352,7 +364,7 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
                             <Button
                               variant="outline"
                               size="icon"
-                              className="text-destructive hover:text-destructive"
+                              className="rounded-full border-2 hover:border-destructive transition-all text-destructive hover:text-destructive"
                               onClick={() => onDeleteProduct(product.id)}
                             >
                               <Trash2 className="h-4 w-4" />

@@ -6,6 +6,7 @@ import { useProducts, Product } from "@/hooks/useProducts";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const { products, loading } = useProducts();
@@ -65,59 +66,79 @@ const Index = () => {
   const totalCartItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-gradient-hero">
+    <div className="min-h-screen bg-gradient-hero animate-fade-in">
       <Navbar
         cartItemsCount={totalCartItems}
         onCartClick={() => setIsCartOpen(true)}
       />
 
-      <section className="relative py-20 px-4 text-center">
-        <div className="max-w-4xl mx-auto">
+      <section className="relative py-24 md:py-32 px-4 text-center overflow-hidden animate-fade-in-down">
+        <div className="max-w-4xl mx-auto relative z-10">
           <div className="flex justify-center mb-8">
             <div className="relative">
-              <div className="w-20 h-20 rounded-full bg-foreground/10 flex items-center justify-center">
-                <div className="text-4xl">👻</div>
+              <div className="w-24 h-24 rounded-full bg-foreground/5 flex items-center justify-center backdrop-blur-sm border border-foreground/10 animate-fade-in">
+                <div className="text-5xl">👻</div>
               </div>
-              <div className="absolute inset-0 rounded-full bg-foreground/5 animate-pulse"></div>
+              <div className="absolute inset-0 rounded-full bg-foreground/5 animate-pulse-slow backdrop-blur-sm"></div>
             </div>
           </div>
-          <h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
-            Ghost Commerce
+          <h1 className="text-5xl md:text-7xl font-bold text-foreground mb-6 tracking-tight animate-fade-in">
+            Ghost <span className="bg-gradient-primary bg-clip-text text-transparent">Commerce</span>
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-3xl mx-auto leading-relaxed animate-fade-in">
             Découvrez notre collection de produits premium avec une expérience d'achat exceptionnelle
           </p>
+          <div className="flex justify-center gap-4 animate-fade-in">
+            <Button
+              size="lg"
+              className="rounded-full bg-gradient-primary hover:shadow-button px-8 py-6 text-lg transition-all duration-300 hover:scale-105"
+              onClick={() => {
+                const productsSection = document.getElementById('products-section');
+                if (productsSection) {
+                  productsSection.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+            >
+              Explorer nos produits
+            </Button>
+          </div>
+        </div>
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-fade-in"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl animate-fade-in"></div>
         </div>
       </section>
 
-      <section className="py-16 px-4 bg-background">
+      <section className="py-20 px-4 bg-background animate-fade-in-up" id="products-section">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold mb-4 text-foreground">Nos Produits</h2>
-            <p className="text-muted-foreground text-lg">
+          <div className="text-center mb-16 animate-fade-in">
+            <h2 className="text-4xl font-bold mb-4 text-foreground">Nos Produits</h2>
+            <p className="text-muted-foreground text-xl max-w-2xl mx-auto">
               Sélection premium de produits pour tous vos besoins
             </p>
           </div>
 
           {loading ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground text-lg">Chargement des produits...</p>
+            <div className="text-center py-20 animate-fade-in">
+              <p className="text-muted-foreground text-xl">Chargement des produits...</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={convertToCardProduct(product)}
-                  onAddToCart={addToCart}
-                  isAdmin={false}
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {products.map((product, index) => (
+                <div key={product.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                  <ProductCard
+                    product={convertToCardProduct(product)}
+                    onAddToCart={addToCart}
+                    isAdmin={false}
+                  />
+                </div>
               ))}
             </div>
           )}
 
           {!loading && products.length === 0 && (
-            <div className="text-center py-12">
+            <div className="text-center py-12 animate-fade-in">
+              <div className="text-6xl mb-6">📭</div>
               <p className="text-muted-foreground text-lg">
                 Aucun produit disponible pour le moment
               </p>

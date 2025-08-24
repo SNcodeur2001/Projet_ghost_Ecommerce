@@ -48,28 +48,28 @@ export const Navbar = ({ cartItemsCount, onCartClick }: NavbarProps) => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center space-x-3">
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 items-center justify-between px-4">
+        <div
+          className="flex items-center space-x-3 cursor-pointer group"
+          onClick={() => window.location.href = '/'}
+        >
           <div className="relative">
-            <Ghost className="h-8 w-8 text-foreground" />
-            <div className="absolute inset-0 animate-pulse">
-              <Ghost className="h-8 w-8 text-muted-foreground opacity-50" />
-            </div>
+            <Ghost className="h-8 w-8 text-foreground transition-transform group-hover:scale-110" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
             Ghost Commerce
           </h1>
         </div>
         
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2 sm:space-x-4">
           {user ? (
             <>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleAdminClick}
-                className="hidden sm:inline-flex hover:bg-accent"
+                className="hidden sm:inline-flex hover:bg-accent rounded-full px-4 transition-all duration-300"
               >
                 <Settings className="h-4 w-4 mr-2" />
                 Admin
@@ -78,7 +78,7 @@ export const Navbar = ({ cartItemsCount, onCartClick }: NavbarProps) => {
                 variant="ghost"
                 size="sm"
                 onClick={handleSignOut}
-                className="hidden sm:inline-flex hover:bg-accent"
+                className="hidden sm:inline-flex hover:bg-accent rounded-full px-4 transition-all duration-300"
               >
                 <LogOut className="h-4 w-4 mr-2" />
                 Déconnexion
@@ -89,7 +89,7 @@ export const Navbar = ({ cartItemsCount, onCartClick }: NavbarProps) => {
               variant="ghost"
               size="sm"
               onClick={handleAuthClick}
-              className="hidden sm:inline-flex hover:bg-accent"
+              className="hidden sm:inline-flex hover:bg-accent rounded-full px-4 transition-all duration-300"
             >
               <LogIn className="h-4 w-4 mr-2" />
               Connexion
@@ -100,14 +100,14 @@ export const Navbar = ({ cartItemsCount, onCartClick }: NavbarProps) => {
             variant="outline"
             size="sm"
             onClick={onCartClick}
-            className="relative hover:bg-accent border-border"
+            className="relative hover:bg-accent border-border rounded-full px-4 transition-all duration-300 group"
           >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            Panier
+            <ShoppingCart className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform" />
+            <span className="hidden sm:inline">Panier</span>
             {cartItemsCount > 0 && (
               <Badge
                 variant="secondary"
-                className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-foreground text-background"
+                className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs bg-foreground text-background rounded-full transition-all duration-300 hover:scale-110"
               >
                 {cartItemsCount}
               </Badge>

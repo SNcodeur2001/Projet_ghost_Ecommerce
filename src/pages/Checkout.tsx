@@ -56,70 +56,76 @@ export const Checkout = ({ items, onBack }: CheckoutProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 p-4">
-      <div className="max-w-4xl mx-auto">
-        <Button variant="ghost" onClick={onBack} className="mb-6">
-          <ArrowLeft className="h-4 w-4 mr-2" />
+    <div className="min-h-screen bg-gradient-hero p-4 md:p-8 animate-fade-in">
+      <div className="max-w-6xl mx-auto">
+        <Button variant="ghost" onClick={onBack} className="mb-8 hover:bg-accent/50 rounded-full px-6 py-2 animate-fade-in">
+          <ArrowLeft className="h-5 w-5 mr-2" />
           Retour au panier
         </Button>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-8 animate-fade-in">
           {/* Informations de livraison */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Informations de livraison</CardTitle>
+          <Card className="bg-card/80 backdrop-blur-sm border-border/50 rounded-2xl shadow-elegant animate-fade-in">
+            <CardHeader className="pb-6">
+              <CardTitle className="text-2xl font-bold">Informations de livraison</CardTitle>
+              <p className="text-muted-foreground">Veuillez fournir vos informations de livraison</p>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Nom complet</Label>
+            <CardContent className="space-y-6">
+              <div className="space-y-6">
+                <div className="space-y-2 animate-fade-in">
+                  <Label htmlFor="name" className="text-base font-medium">Nom complet</Label>
                   <Input
                     id="name"
                     value={customerInfo.name}
                     onChange={(e) => setCustomerInfo(prev => ({ ...prev, name: e.target.value }))}
                     required
+                    className="py-6 px-4 rounded-xl border-border/50 focus:border-primary focus:ring-primary"
                   />
                 </div>
                 
-                <div>
-                  <Label htmlFor="email">Email</Label>
+                <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                  <Label htmlFor="email" className="text-base font-medium">Email</Label>
                   <Input
                     id="email"
                     type="email"
                     value={customerInfo.email}
                     onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
                     required
+                    className="py-6 px-4 rounded-xl border-border/50 focus:border-primary focus:ring-primary"
                   />
                 </div>
                 
-                <div>
-                  <Label htmlFor="phone">Téléphone</Label>
+                <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                  <Label htmlFor="phone" className="text-base font-medium">Téléphone</Label>
                   <Input
                     id="phone"
                     value={customerInfo.phone}
                     onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
                     required
+                    className="py-6 px-4 rounded-xl border-border/50 focus:border-primary focus:ring-primary"
                   />
                 </div>
                 
-                <div>
-                  <Label htmlFor="address">Adresse</Label>
+                <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                  <Label htmlFor="address" className="text-base font-medium">Adresse</Label>
                   <Input
                     id="address"
                     value={customerInfo.address}
                     onChange={(e) => setCustomerInfo(prev => ({ ...prev, address: e.target.value }))}
                     required
+                    className="py-6 px-4 rounded-xl border-border/50 focus:border-primary focus:ring-primary"
                   />
                 </div>
 
-                <Separator className="my-6" />
-
+                <Separator className="my-6 bg-border/50 animate-fade-in" style={{ animationDelay: '0.4s' }} />
+                
                 <Button
                   onClick={handleWhatsAppSend}
-                  className="w-full bg-gradient-primary hover:shadow-button transition-all duration-300"
+                  className="w-full bg-gradient-primary hover:shadow-button rounded-full py-6 text-lg transition-all duration-500 hover:scale-[1.02] animate-fade-in"
                   size="lg"
+                  style={{ animationDelay: '0.5s' }}
                 >
-                  <Send className="h-4 w-4 mr-2" />
+                  <Send className="h-5 w-5 mr-2" />
                   Envoyer la commande par WhatsApp
                 </Button>
               </div>
@@ -127,47 +133,50 @@ export const Checkout = ({ items, onBack }: CheckoutProps) => {
           </Card>
 
           {/* Récapitulatif de commande */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Récapitulatif de commande</CardTitle>
+          <Card className="bg-card/80 backdrop-blur-sm border-border/50 rounded-2xl shadow-elegant animate-fade-in">
+            <CardHeader className="pb-6">
+              <CardTitle className="text-2xl font-bold">Récapitulatif de commande</CardTitle>
+              <p className="text-muted-foreground">{items.length} article{items.length > 1 ? 's' : ''} dans votre commande</p>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {items.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-3">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="h-12 w-12 rounded object-cover"
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium">{item.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        Quantité: {item.quantity}
+              <div className="space-y-6">
+                <div className="max-h-96 overflow-y-auto pr-2">
+                  {items.map((item, index) => (
+                    <div key={item.id} className="flex items-center space-x-4 py-4 border-b border-border/50 last:border-0 animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="h-16 w-16 rounded-xl object-cover"
+                      />
+                      <div className="flex-1">
+                        <div className="font-bold text-lg">{item.name}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Quantité: {item.quantity}
+                        </div>
+                      </div>
+                      <div className="font-bold text-lg">
+                        {(item.price * item.quantity).toLocaleString()} <span className="text-base font-normal">FCFA</span>
                       </div>
                     </div>
-                    <div className="font-medium">
-                      {(item.price * item.quantity).toLocaleString()} FCFA
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
                 
-                <Separator />
+                <Separator className="bg-border/50 animate-fade-in" />
                 
-                <div className="space-y-2">
-                  <div className="flex justify-between">
+                <div className="space-y-4 animate-fade-in">
+                  <div className="flex justify-between text-lg">
                     <span>Sous-total</span>
-                    <span>{total.toLocaleString()} FCFA</span>
+                    <span className="font-medium">{total.toLocaleString()} FCFA</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-lg">
                     <span>Livraison</span>
-                    <span className="text-green-600">Gratuite</span>
+                    <span className="text-green-600 font-medium">Gratuite</span>
                   </div>
-                  <Separator />
-                  <div className="flex justify-between text-lg font-semibold">
+                  <Separator className="bg-border/50" />
+                  <div className="flex justify-between text-2xl font-bold pt-2">
                     <span>Total</span>
                     <span className="bg-gradient-primary bg-clip-text text-transparent">
-                      {total.toLocaleString()} FCFA
+                      {total.toLocaleString()} <span className="text-xl font-normal">FCFA</span>
                     </span>
                   </div>
                 </div>
