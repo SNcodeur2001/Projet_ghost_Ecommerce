@@ -36,6 +36,8 @@ const Index = () => {
     price: product.price,
     image: product.image_url || "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400",
     category: product.category || "Général",
+    collection: product.collection,
+    sizes: product.sizes,
     rating: 4.5,
     inStock: product.in_stock ?? true,
   });

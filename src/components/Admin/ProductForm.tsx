@@ -23,6 +23,8 @@ export const ProductForm = ({ product, onSubmit, onCancel, onImageUpload }: Prod
     description: product?.description || "",
     price: product?.price || 0,
     category: product?.category || "",
+    collection: product?.collection || "",
+    sizes: product?.sizes || [],
     in_stock: product?.in_stock ?? true,
     image_url: product?.image_url || ""
   });
@@ -181,6 +183,52 @@ export const ProductForm = ({ product, onSubmit, onCancel, onImageUpload }: Prod
                 />
               </div>
             </div>
+
+            {/* Collection */}
+            <div className="space-y-2">
+              <Label htmlFor="collection" className="text-foreground">Collection</Label>
+              <div className="relative">
+                <Tag className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="collection"
+                  value={formData.collection}
+                  onChange={(e) => setFormData(prev => ({ ...prev, collection: e.target.value }))}
+                  className="pl-10 border-border"
+                  placeholder="Ex: Été 2024"
+                />
+              </div>
+            </div>
+
+            {/* Sizes - only show for T-shirts */}
+            {(formData.category?.toLowerCase().includes('t-shirt') || formData.category?.toLowerCase().includes('tshirt')) && (
+              <div className="space-y-3">
+                <Label className="text-foreground">Tailles disponibles</Label>
+                <div className="grid grid-cols-5 gap-2">
+                  {['S', 'M', 'L', 'XL', 'XXL'].map((size) => (
+                    <div key={size} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`size-${size}`}
+                        checked={formData.sizes?.includes(size) || false}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setFormData(prev => ({
+                            ...prev,
+                            sizes: checked
+                              ? [...(prev.sizes || []), size]
+                              : (prev.sizes || []).filter(s => s !== size)
+                          }));
+                        }}
+                        className="rounded border-border"
+                      />
+                      <Label htmlFor={`size-${size}`} className="text-sm font-normal">
+                        {size}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Description */}
             <div className="space-y-2">

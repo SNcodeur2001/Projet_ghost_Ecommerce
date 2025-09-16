@@ -98,6 +98,7 @@ export type Database = {
       products: {
         Row: {
           category: string | null
+          collection: string | null
           created_at: string
           description: string | null
           id: string
@@ -105,10 +106,12 @@ export type Database = {
           in_stock: boolean | null
           name: string
           price: number
+          sizes: string[] | null
           updated_at: string
         }
         Insert: {
           category?: string | null
+          collection?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -116,10 +119,12 @@ export type Database = {
           in_stock?: boolean | null
           name: string
           price: number
+          sizes?: string[] | null
           updated_at?: string
         }
         Update: {
           category?: string | null
+          collection?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -127,6 +132,7 @@ export type Database = {
           in_stock?: boolean | null
           name?: string
           price?: number
+          sizes?: string[] | null
           updated_at?: string
         }
         Relationships: []

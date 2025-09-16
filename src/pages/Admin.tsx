@@ -28,6 +28,8 @@ const convertToUIProduct = (product: UseProduct): CardProduct => ({
   price: product.price,
   image: product.image_url || "",
   category: product.category || "",
+  collection: product.collection,
+  sizes: product.sizes,
   rating: 4.5, // Default rating since it's not in the database
   inStock: product.in_stock ?? true,
 });
@@ -41,6 +43,8 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
     price: "",
     image: "",
     category: "",
+    collection: "",
+    sizes: [] as string[],
     rating: "4.5",
     inStock: true,
   });
@@ -119,6 +123,8 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
       price: parseFloat(formData.price),
       image_url: imageUrl,
       category: formData.category,
+      collection: formData.collection,
+      sizes: formData.sizes,
       in_stock: formData.inStock,
     };
 
@@ -138,6 +144,8 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
       price: "",
       image: "",
       category: "",
+      collection: "",
+      sizes: [],
       rating: "4.5",
       inStock: true,
     });
@@ -155,6 +163,8 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
       price: product.price.toString(),
       image: product.image_url || "",
       category: product.category || "",
+      collection: product.collection || "",
+      sizes: product.sizes || [],
       rating: "4.5",
       inStock: product.in_stock ?? true,
     });
@@ -280,7 +290,46 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
                     </Select>
                   </div>
 
-                  <div className="flex items-center space-x-3 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                  <div className="space-y-2 animate-fade-in" style={{ animationDelay: '0.45s' }}>
+                    <Label htmlFor="collection" className="text-base font-medium">Collection</Label>
+                    <Input
+                      id="collection"
+                      value={formData.collection}
+                      onChange={(e) => setFormData(prev => ({ ...prev, collection: e.target.value }))}
+                      placeholder="Ex: Été 2024"
+                      className="py-6 px-4 rounded-xl border-border/50 focus:border-primary focus:ring-primary"
+                    />
+                  </div>
+
+                  <div className="space-y-3 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                    <Label className="text-base font-medium">Tailles disponibles</Label>
+                    <div className="grid grid-cols-5 gap-2">
+                      {['S', 'M', 'L', 'XL', 'XXL'].map((size) => (
+                        <div key={size} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={`size-${size}`}
+                            checked={formData.sizes?.includes(size) || false}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setFormData(prev => ({
+                                ...prev,
+                                sizes: checked
+                                  ? [...(prev.sizes || []), size]
+                                  : (prev.sizes || []).filter(s => s !== size)
+                              }));
+                            }}
+                            className="rounded border-border/50"
+                          />
+                          <Label htmlFor={`size-${size}`} className="text-sm font-normal">
+                            {size}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3 animate-fade-in" style={{ animationDelay: '0.55s' }}>
                     <Switch
                       id="inStock"
                       checked={formData.inStock}
@@ -342,6 +391,11 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
                             </p>
                             <div className="flex flex-wrap items-center gap-2 mt-3">
                               <Badge variant="secondary" className="rounded-full px-3 py-1">{uiProduct.category}</Badge>
+                              {uiProduct.collection && (
+                                <Badge variant="outline" className="rounded-full px-3 py-1 border-primary/50">
+                                  {uiProduct.collection}
+                                </Badge>
+                              )}
                               <span className="text-base font-bold">
                                 {uiProduct.price.toLocaleString()} <span className="text-sm font-normal">FCFA</span>
                               </span>
@@ -351,6 +405,15 @@ export const Admin = ({ products, onAddProduct, onUpdateProduct, onDeleteProduct
                                 <Badge variant="destructive" className="rounded-full px-3 py-1">Rupture</Badge>
                               )}
                             </div>
+                            {uiProduct.sizes && uiProduct.sizes.length > 0 && (
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {uiProduct.sizes.map((size) => (
+                                  <Badge key={size} variant="outline" className="text-xs px-2 py-1">
+                                    {size}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
                           </div>
                           <div className="flex space-x-2">
                             <Button

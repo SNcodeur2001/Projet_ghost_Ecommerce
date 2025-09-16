@@ -25,6 +25,9 @@ const formatOrderForWhatsApp = (items: CartItem[], customerInfo: any, total: num
   message += "📦 *Détails de la commande:*\n";
   items.forEach(item => {
     message += `\n• ${item.name}\n`;
+    if (item.selectedSize) {
+      message += `  Taille: ${item.selectedSize}\n`;
+    }
     message += `  Quantité: ${item.quantity}\n`;
     message += `  Prix unitaire: ${item.price.toLocaleString()} FCFA\n`;
     message += `  Total: ${(item.price * item.quantity).toLocaleString()} FCFA\n`;
@@ -153,6 +156,11 @@ export const Checkout = ({ items, onBack }: CheckoutProps) => {
                         <div className="text-sm text-muted-foreground">
                           Quantité: {item.quantity}
                         </div>
+                        {item.selectedSize && (
+                          <div className="text-sm text-muted-foreground">
+                            Taille: {item.selectedSize}
+                          </div>
+                        )}
                       </div>
                       <div className="font-bold text-lg">
                         {(item.price * item.quantity).toLocaleString()} <span className="text-base font-normal">FCFA</span>

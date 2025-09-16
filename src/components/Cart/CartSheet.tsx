@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 
 export interface CartItem extends Product {
   quantity: number;
+  selectedSize?: string;
 }
 
 interface CartSheetProps {
@@ -83,6 +84,11 @@ export const CartSheet = ({
                     <p className="text-sm text-muted-foreground mb-2">
                       {item.price.toLocaleString()} FCFA
                     </p>
+                    {item.selectedSize && (
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Taille: {item.selectedSize}
+                      </p>
+                    )}
                     <div className="flex items-center space-x-2">
                       <Button
                         variant="outline"

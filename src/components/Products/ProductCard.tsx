@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShoppingCart, Star } from "lucide-react";
+import { useState } from "react";
 
 export interface Product {
   id: string;
@@ -10,8 +12,11 @@ export interface Product {
   price: number;
   image: string;
   category: string;
+  collection: string | null;
+  sizes: string[] | null;
   rating: number;
   inStock: boolean;
+  selectedSize?: string;
 }
 
 interface ProductCardProps {
@@ -22,6 +27,16 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ product, onAddToCart, isAdmin = false, onEdit }: ProductCardProps) => {
+  const [selectedSize, setSelectedSize] = useState<string>("");
+
+  const handleAddToCart = () => {
+    if (product.sizes && product.sizes.length > 0 && !selectedSize) {
+      // If product has sizes but none selected, don't add to cart
+      return;
+    }
+    onAddToCart({ ...product, selectedSize: selectedSize || undefined });
+  };
+
   return (
     <Card className="group cursor-pointer transition-all duration-500 hover:shadow-elegant hover:-translate-y-2 border-0 bg-card/80 backdrop-blur-sm rounded-2xl overflow-hidden">
       <div className="relative overflow-hidden">
@@ -35,9 +50,16 @@ export const ProductCard = ({ product, onAddToCart, isAdmin = false, onEdit }: P
             Rupture de stock
           </Badge>
         )}
-        <Badge variant="secondary" className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium">
-          {product.category}
-        </Badge>
+        <div className="absolute top-3 right-3 flex flex-col gap-1">
+          <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium">
+            {product.category}
+          </Badge>
+          {product.collection && (
+            <Badge variant="outline" className="bg-background/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-medium border-primary/50">
+              {product.collection}
+            </Badge>
+          )}
+        </div>
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </div>
       
@@ -53,7 +75,20 @@ export const ProductCard = ({ product, onAddToCart, isAdmin = false, onEdit }: P
         <p className="text-muted-foreground text-sm mb-4 line-clamp-2 leading-relaxed">
           {product.description}
         </p>
-        
+
+        {product.sizes && product.sizes.length > 0 && (
+          <div className="mb-3">
+            <p className="text-xs text-muted-foreground mb-2">Tailles disponibles:</p>
+            <div className="flex flex-wrap gap-1">
+              {product.sizes.map((size) => (
+                <Badge key={size} variant="outline" className="text-xs px-2 py-1">
+                  {size}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <span className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
             {product.price.toLocaleString()} <span className="text-base font-normal">FCFA</span>
@@ -61,7 +96,7 @@ export const ProductCard = ({ product, onAddToCart, isAdmin = false, onEdit }: P
         </div>
       </CardContent>
       
-      <CardFooter className="px-5 pb-5 pt-0">
+      <CardFooter className="px-5 pb-5 pt-0 space-y-3">
         {isAdmin ? (
           <Button
             variant="outline"
@@ -71,14 +106,35 @@ export const ProductCard = ({ product, onAddToCart, isAdmin = false, onEdit }: P
             Modifier
           </Button>
         ) : (
-          <Button
-            className="w-full bg-gradient-primary hover:shadow-button rounded-full transition-all duration-500 hover:scale-[1.02] group"
-            onClick={() => onAddToCart(product)}
-            disabled={!product.inStock}
-          >
-            <ShoppingCart className="h-4 w-4 mr-2 group-hover:animate-bounce" />
-            {product.inStock ? "Ajouter au panier" : "Indisponible"}
-          </Button>
+          <>
+            {product.sizes && product.sizes.length > 0 && (
+              <div className="w-full">
+                <Select value={selectedSize} onValueChange={setSelectedSize}>
+                  <SelectTrigger className="w-full rounded-full border-2">
+                    <SelectValue placeholder="Choisir une taille" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {product.sizes.map((size) => (
+                      <SelectItem key={size} value={size}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            <Button
+              className="w-full bg-gradient-primary hover:shadow-button rounded-full transition-all duration-500 hover:scale-[1.02] group"
+              onClick={handleAddToCart}
+              disabled={!product.inStock || (product.sizes && product.sizes.length > 0 && !selectedSize)}
+            >
+              <ShoppingCart className="h-4 w-4 mr-2 group-hover:animate-bounce" />
+              {product.inStock
+                ? (product.sizes && product.sizes.length > 0 && !selectedSize ? "Choisir une taille" : "Ajouter au panier")
+                : "Indisponible"
+              }
+            </Button>
+          </>
         )}
       </CardFooter>
     </Card>

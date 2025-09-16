@@ -9,6 +9,8 @@ export interface Product {
   price: number;
   image_url: string | null;
   category: string | null;
+  collection: string | null;
+  sizes: string[] | null;
   in_stock: boolean | null;
   created_at: string;
   updated_at: string;
