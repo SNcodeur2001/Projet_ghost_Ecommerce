@@ -59,10 +59,13 @@ const Index = () => {
     );
   }, [products, searchQuery]);
 
-  // Pagination logic
+  // Pagination logic for desktop
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+
+  // For mobile: show all filtered products in carousel
+  const mobileProducts = filteredProducts;
 
   // Reset to first page when search changes
   useEffect(() => {
@@ -212,7 +215,7 @@ const Index = () => {
                     className="w-full"
                   >
                     <CarouselContent className="-ml-4">
-                      {paginatedProducts.map((product, index) => (
+                      {mobileProducts.map((product, index) => (
                         <CarouselItem key={product.id} className="pl-4 basis-full">
                           <div className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
                             <ProductCard
@@ -230,9 +233,9 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Pagination */}
+              {/* Pagination - Only show on desktop */}
               {totalPages > 1 && (
-                <div className="flex justify-center">
+                <div className="hidden md:flex justify-center">
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
