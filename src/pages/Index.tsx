@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Navbar } from "@/components/Layout/Navbar";
 import { ProductCard, Product as CardProduct } from "@/components/Products/ProductCard";
 import { CartSheet, CartItem } from "@/components/Cart/CartSheet";
@@ -7,12 +7,32 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 const Index = () => {
   const { products, loading } = useProducts();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8; // Show 8 products per page
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,6 +48,26 @@ const Index = () => {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Filter products based on search query
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) return products;
+    return products.filter(product =>
+      product.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.category?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [products, searchQuery]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery]);
 
   const convertToCardProduct = (product: Product): CardProduct => ({
     id: product.id,
@@ -120,31 +160,109 @@ const Index = () => {
             </p>
           </div>
 
+          {/* Search Input */}
+          <div className="mb-8 max-w-md mx-auto animate-fade-in">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Input
+                type="text"
+                placeholder="Rechercher des produits..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 rounded-full border-2 focus:border-primary transition-all duration-300"
+              />
+            </div>
+          </div>
+
           {loading ? (
             <div className="text-center py-20 animate-fade-in">
               <p className="text-muted-foreground text-xl">Chargement des produits...</p>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-              {products.map((product, index) => (
-                <div key={product.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <ProductCard
-                    product={convertToCardProduct(product)}
-                    onAddToCart={addToCart}
-                    isAdmin={false}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {!loading && products.length === 0 && (
+          ) : filteredProducts.length === 0 ? (
             <div className="text-center py-12 animate-fade-in">
-              <div className="text-6xl mb-6">📭</div>
+              <div className="text-6xl mb-6">🔍</div>
               <p className="text-muted-foreground text-lg">
-                Aucun produit disponible pour le moment
+                {searchQuery ? "Aucun produit trouvé pour votre recherche" : "Aucun produit disponible pour le moment"}
               </p>
             </div>
+          ) : (
+            <>
+              {/* Products Display */}
+              <div className="mb-8">
+                {/* Desktop Grid */}
+                <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                  {paginatedProducts.map((product, index) => (
+                    <div key={product.id} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                      <ProductCard
+                        product={convertToCardProduct(product)}
+                        onAddToCart={addToCart}
+                        isAdmin={false}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Mobile Carousel */}
+                <div className="md:hidden">
+                  <Carousel
+                    opts={{
+                      align: "start",
+                      loop: false,
+                    }}
+                    className="w-full"
+                  >
+                    <CarouselContent className="-ml-4">
+                      {paginatedProducts.map((product, index) => (
+                        <CarouselItem key={product.id} className="pl-4 basis-full">
+                          <div className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                            <ProductCard
+                              product={convertToCardProduct(product)}
+                              onAddToCart={addToCart}
+                              isAdmin={false}
+                            />
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious />
+                    <CarouselNext />
+                  </Carousel>
+                </div>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex justify-center">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            onClick={() => setCurrentPage(page)}
+                            isActive={currentPage === page}
+                            className="cursor-pointer"
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
