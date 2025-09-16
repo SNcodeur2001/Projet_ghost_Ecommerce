@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -207,29 +207,77 @@ const Index = () => {
 
                 {/* Mobile Carousel */}
                 <div className="md:hidden">
-                  <Carousel
-                    opts={{
-                      align: "start",
-                      loop: false,
-                    }}
-                    className="w-full"
-                  >
-                    <CarouselContent className="-ml-4">
-                      {mobileProducts.map((product, index) => (
-                        <CarouselItem key={product.id} className="pl-4 basis-full">
-                          <div className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
-                            <ProductCard
-                              product={convertToCardProduct(product)}
-                              onAddToCart={addToCart}
-                              isAdmin={false}
-                            />
+                  <div className="relative">
+                    {/* Swipe Indicator */}
+                    <div className="absolute top-4 right-4 z-10 bg-black/70 text-white px-3 py-2 rounded-full text-sm font-medium flex items-center gap-2 animate-pulse">
+                      <span>Swiper →</span>
+                      <div className="w-4 h-4 rounded-full bg-white/20 flex items-center justify-center">
+                        <div className="w-2 h-2 border-r-2 border-b-2 border-white transform rotate-[-45deg]"></div>
+                      </div>
+                    </div>
+
+                    <Carousel
+                      opts={{
+                        align: "start",
+                        loop: false,
+                      }}
+                      className="w-full"
+                      data-carousel="mobile"
+                    >
+                      <CarouselContent className="-ml-4">
+                        {mobileProducts.map((product, index) => (
+                          <CarouselItem key={product.id} className="pl-4 basis-full">
+                            <div className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                              <ProductCard
+                                product={convertToCardProduct(product)}
+                                onAddToCart={addToCart}
+                                isAdmin={false}
+                              />
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+
+                      {/* Custom Navigation Buttons */}
+                      <div className="flex justify-between items-center mt-6 px-4">
+                        <CarouselPrevious
+                          className="static rounded-full bg-white/90 backdrop-blur-sm border-2 border-primary/20 hover:border-primary hover:bg-primary hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl"
+                          data-carousel-prev
+                        >
+                          <div className="flex items-center gap-2">
+                            <ChevronLeft className="w-5 h-5" />
+                            Précédent
                           </div>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    <CarouselPrevious />
-                    <CarouselNext />
-                  </Carousel>
+                        </CarouselPrevious>
+
+                        <div className="flex gap-2">
+                          {mobileProducts.slice(0, 5).map((_, index) => (
+                            <div
+                              key={index}
+                              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                                index === 0 ? 'bg-primary scale-125' : 'bg-gray-300'
+                              }`}
+                            />
+                          ))}
+                          {mobileProducts.length > 5 && (
+                            <div className="text-xs text-muted-foreground ml-2">
+                              +{mobileProducts.length - 5}
+                            </div>
+                          )}
+                        </div>
+
+                        <CarouselNext
+                          className="static rounded-full bg-white/90 backdrop-blur-sm border-2 border-primary/20 hover:border-primary hover:bg-primary hover:text-white transition-all duration-300 shadow-lg hover:shadow-xl"
+                          data-carousel-next
+                        >
+                          <div className="flex items-center gap-2">
+                            Suivant
+                            <ChevronRight className="w-5 h-5" />
+                          </div>
+                        </CarouselNext>
+                      </div>
+                    </Carousel>
+                  </div>
                 </div>
               </div>
 
