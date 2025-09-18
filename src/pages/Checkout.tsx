@@ -178,7 +178,7 @@ export const Checkout = ({ items, onBack }: CheckoutProps) => {
                   </div>
                   <div className="flex justify-between text-lg">
                     <span>Livraison</span>
-                    <span className="text-green-600 font-medium">Gratuite</span>
+                    <span className="text-green-600 font-medium">Partout dans le monde</span>
                   </div>
                   <Separator className="bg-border/50" />
                   <div className="flex justify-between text-2xl font-bold pt-2">
