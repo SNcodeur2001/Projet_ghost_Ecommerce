@@ -54,8 +54,12 @@ export const Navbar = ({ cartItemsCount, onCartClick }: NavbarProps) => {
           className="flex items-center space-x-3 cursor-pointer group"
           onClick={() => window.location.href = '/'}
         >
-          <div className="relative">
-            <Ghost className="h-8 w-8 text-foreground transition-transform group-hover:scale-110" />
+          <div className="relative w-8 h-8 rounded-full overflow-hidden">
+            <img 
+              src="/ghost-logo.jpeg" 
+              alt="Ghost Logo" 
+              className="w-full h-full object-cover transition-transform group-hover:scale-110" 
+            />
           </div>
           <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
             Ghost Commerce

@@ -121,8 +121,12 @@ const Index = () => {
         <div className="max-w-4xl mx-auto relative z-10">
           <div className="flex justify-center mb-8">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-foreground/5 flex items-center justify-center backdrop-blur-sm border border-foreground/10 animate-fade-in">
-                <div className="text-5xl">👻</div>
+              <div className="w-24 h-24 rounded-full bg-foreground/5 flex items-center justify-center backdrop-blur-sm border border-foreground/10 animate-fade-in overflow-hidden">
+                <img 
+                  src="/ghost-logo.jpeg" 
+                  alt="Ghost Logo" 
+                  className="w-full h-full object-cover"
+                />
               </div>
               <div className="absolute inset-0 rounded-full bg-foreground/5 animate-pulse-slow backdrop-blur-sm"></div>
             </div>
